@@ -3,6 +3,7 @@ output/
 logs/
 data/clients/
 data/configs/
+data/recordings/
 *.csv
 *.xlsx
 *.json
