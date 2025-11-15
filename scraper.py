@@ -17,6 +17,7 @@ from pathlib import Path
 import random
 from dataclasses import dataclass, asdict
 from enum import Enum
+os.makedirs("logs", exist_ok=True)
 
 # Configure logging
 logging.basicConfig(

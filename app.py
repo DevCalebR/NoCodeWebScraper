@@ -1,5 +1,5 @@
 """
-ScraperPro - Web Interface
+ScraperPro - Web Interface (UPDATED WITH VISUAL RECORDER)
 Streamlit-based UI for managing scraper configurations
 """
 
@@ -7,9 +7,10 @@ import streamlit as st
 import json
 from pathlib import Path
 import pandas as pd
+from datetime import datetime
 from scraper import (
     ScraperPro, ClientManager, ScraperConfig, 
-    SubscriptionTier, hashlib, datetime
+    SubscriptionTier, hashlib
 )
 
 # Page configuration
@@ -59,13 +60,13 @@ def login_page():
             help="Choose the plan you'd like to try. You'll get full access for 7 days!"
         )
         
-        # Show what they'll get during trial
         trial_tier_info = SubscriptionTier[tier].value
         st.write(f"**During your 7-day trial, you'll get:**")
         st.write(f"✅ {trial_tier_info['max_requests_per_day'] if trial_tier_info['max_requests_per_day'] != -1 else 'Unlimited'} requests/day")
         st.write(f"✅ {trial_tier_info['max_configs'] if trial_tier_info['max_configs'] != -1 else 'Unlimited'} configurations")
         st.write(f"✅ Export formats: {', '.join(trial_tier_info['export_formats'])}")
         st.write(f"✅ API access: {'Yes' if trial_tier_info['api_access'] else 'No'}")
+        st.write("✅ **NEW: Visual Recorder** - No-code scraper builder")
         
         if st.button("🚀 Start Free Trial", type="primary"):
             if name and email:
@@ -74,16 +75,13 @@ def login_page():
                 st.code(f"Your API Key: {client.api_key}", language="text")
                 st.info("⚠️ Save this API key securely. You'll need it to login.")
                 
-                # Calculate trial end date for display
-                from datetime import datetime
                 trial_end = datetime.fromisoformat(client.trial_ends_at)
-                st.warning(f"📅 Your trial ends on {trial_end.strftime('%B %d, %Y at %I:%M %p')}. After that, you'll need to add payment to continue using {tier}.")
+                st.warning(f"📅 Your trial ends on {trial_end.strftime('%B %d, %Y at %I:%M %p')}.")
             else:
                 st.error("Please fill all fields")
     
     with tab3:
         st.header("💰 Pricing Plans")
-        
         st.info("🎁 **All plans include a 7-day free trial!** Try before you buy.")
         
         col1, col2 = st.columns(2)
@@ -99,6 +97,7 @@ def login_page():
             st.write("✅ Scheduled scraping")
             st.write("✅ API access")
             st.write("✅ Custom headers")
+            st.write("✅ **Visual Recorder**")
             st.write("✅ 7-day free trial")
         
         with col2:
@@ -113,37 +112,8 @@ def login_page():
             st.write("✅ Priority support")
             st.write("✅ Dedicated proxies")
             st.write("✅ Custom integrations")
+            st.write("✅ **Visual Recorder Pro**")
             st.write("✅ 7-day free trial")
-        
-        st.write("---")
-        st.write("### ❓ Frequently Asked Questions")
-        
-        with st.expander("How does the free trial work?"):
-            st.write("""
-            - Sign up and choose either Pro or Enterprise
-            - Get full access to all features for 7 days
-            - No credit card required to start
-            - On day 7, your trial expires
-            - Add payment to continue with your chosen plan
-            - Cancel anytime during the trial with no charges
-            """)
-        
-        with st.expander("What happens after the trial?"):
-            st.write("""
-            When your 7-day trial ends:
-            - Your account will be temporarily deactivated
-            - Your data and configurations are saved
-            - Add payment to reactivate and continue
-            - You'll be charged the monthly rate for your selected plan
-            """)
-        
-        with st.expander("Can I switch plans?"):
-            st.write("""
-            Yes! Contact support to:
-            - Upgrade from Pro to Enterprise anytime
-            - Downgrade (at next billing cycle)
-            - Cancel your subscription
-            """)
 
 
 def dashboard():
@@ -157,7 +127,6 @@ def dashboard():
         st.write(f"**Email:** {client.email}")
         st.write(f"**Plan:** {client.tier}")
         
-        # Trial warning banner
         if client.is_trial:
             days_remaining = st.session_state.app.client_manager.get_trial_days_remaining(client)
             if days_remaining > 0:
@@ -165,11 +134,7 @@ def dashboard():
                 st.caption(f"Trial ends: {datetime.fromisoformat(client.trial_ends_at).strftime('%b %d, %Y')}")
                 
                 if st.button("💳 Add Payment & Activate", type="primary"):
-                    st.info("Payment processing coming soon! This will convert your trial to a paid subscription.")
-                    # TODO: Integrate Stripe here
-                    # if st.session_state.app.client_manager.convert_trial_to_paid(client):
-                    #     st.success("Account activated!")
-                    #     st.rerun()
+                    st.info("Payment processing coming soon!")
             else:
                 st.error("⚠️ Trial Expired")
                 st.write("Your trial has ended. Add payment to continue.")
@@ -199,22 +164,189 @@ def dashboard():
     # Main content
     st.title(f"🕷️ ScraperPro Dashboard")
     
-    # Show trial expiration warning at top if trial is ending soon
+    # Show trial expiration warning
     if client.is_trial:
         days_remaining = st.session_state.app.client_manager.get_trial_days_remaining(client)
         if days_remaining <= 2 and days_remaining > 0:
             st.warning(f"⚠️ Your trial ends in {days_remaining} day{'s' if days_remaining != 1 else ''}! Add payment to keep your {client.tier} features.")
     
-    tab1, tab2, tab3 = st.tabs(["🎯 Run Scraper", "⚙️ Configurations", "📊 Results"])
+    # NEW: Add Visual Recorder tab
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "🎥 Visual Recorder",  # NEW!
+        "🎯 Run Scraper", 
+        "⚙️ Configurations", 
+        "📊 Results"
+    ])
     
     with tab1:
-        run_scraper_tab()
+        visual_recorder_tab()  # NEW FUNCTION
     
     with tab2:
-        configurations_tab()
+        run_scraper_tab()
     
     with tab3:
+        configurations_tab()
+    
+    with tab4:
         results_tab()
+
+
+def visual_recorder_tab():
+    """NEW: Visual Recorder interface"""
+    st.header("🎥 Visual Scraper Recorder")
+    
+    st.info("""
+    **🚀 NEW FEATURE: Record your browsing to create scrapers automatically!**
+    
+    The Visual Recorder watches you browse and click, then generates a scraper configuration for you.
+    No CSS selectors needed!
+    """)
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown("""
+        ### How it works:
+        
+        1. **Install Extension** - Install the ScraperPro Chrome/Firefox extension
+        2. **Start Recording** - Click the record button in the extension
+        3. **Browse & Click** - Navigate to your target site and click elements you want to extract
+        4. **Stop Recording** - The extension sends the data here
+        5. **Review & Deploy** - We auto-generate your scraper config!
+        
+        ### What gets recorded:
+        - ✅ Pages you visit
+        - ✅ Elements you click
+        - ✅ Data you select to extract
+        - ✅ Pagination buttons
+        - ❌ Passwords or sensitive data (never recorded)
+        """)
+    
+    with col2:
+        st.markdown("""
+        ### 📥 Install Extension
+        
+        Available for:
+        - Chrome Web Store
+        - Firefox Add-ons
+        - Edge Extensions
+        
+        👉 [Download Extension](#)
+        """)
+        
+        if st.button("🎬 Open Recorder UI", type="primary", use_container_width=True):
+            st.info("Opening Visual Recorder in new window...")
+    
+    st.markdown("---")
+    
+    # Show recent recordings
+    st.subheader("📼 Your Recordings")
+    
+    try:
+        client = st.session_state.client
+        recordings_dir = Path('data/recordings')
+        
+        if recordings_dir.exists():
+            # Filter recordings for this client
+            client_recordings = list(recordings_dir.glob(f'{client.client_id}_*.json'))
+            
+            if client_recordings:
+                st.write(f"Found {len(client_recordings)} recording(s)")
+                
+                for rec_file in sorted(client_recordings, key=lambda x: x.stat().st_mtime, reverse=True)[:5]:
+                    try:
+                        with open(rec_file, 'r') as f:
+                            rec_data = json.load(f)
+                        
+                        with st.expander(f"🎬 Recording: {rec_data.get('recording_id', rec_file.stem)}"):
+                            col1, col2, col3 = st.columns(3)
+                            
+                            with col1:
+                                st.metric("Actions", rec_data.get('action_count', 0))
+                            
+                            with col2:
+                                if rec_data.get('timestamp'):
+                                    timestamp = datetime.fromtimestamp(rec_data['timestamp'] / 1000)
+                                    st.write(f"**Created:** {timestamp.strftime('%Y-%m-%d %H:%M')}")
+                            
+                            with col3:
+                                if st.button("Generate Config", key=f"gen_{rec_file.stem}"):
+                                    st.info("Config generation coming soon! This will analyze your recording and create a scraper configuration.")
+                            
+                            # Show actions preview
+                            if rec_data.get('actions'):
+                                st.write("**Actions Preview:**")
+                                for i, action in enumerate(rec_data['actions'][:5]):
+                                    st.caption(f"{i+1}. {action.get('type', 'unknown')} - {action.get('selector', '')[:50]}")
+                                if len(rec_data['actions']) > 5:
+                                    st.caption(f"... and {len(rec_data['actions']) - 5} more actions")
+                    except Exception as e:
+                        st.error(f"Error loading recording {rec_file.name}: {str(e)}")
+            else:
+                st.info("No recordings yet. Install the extension and start recording!")
+        else:
+            recordings_dir.mkdir(parents=True, exist_ok=True)
+            st.info("No recordings yet. Install the extension and start recording!")
+    except Exception as e:
+        st.error(f"Error loading recordings: {str(e)}")
+    
+    # Tutorial section
+    st.markdown("---")
+    st.subheader("🎓 Quick Tutorial")
+    
+    video_tab, guide_tab = st.tabs(["📹 Video", "📖 Step-by-Step"])
+    
+    with video_tab:
+        st.info("Video tutorial coming soon!")
+    
+    with guide_tab:
+        st.markdown("""
+        ### Step-by-Step Guide
+        
+        #### 1. Install the Extension
+        - Visit Chrome Web Store
+        - Search "ScraperPro Visual Recorder"
+        - Click "Add to Chrome"
+        
+        #### 2. Start Recording
+        - Click the ScraperPro icon in your toolbar
+        - Click "Start Recording"
+        - A red banner appears (you're now recording!)
+        
+        #### 3. Navigate & Extract
+        - Go to the website you want to scrape
+        - Click on the **first item** in a list
+        - Select data fields you want:
+          - Click an element
+          - Enter field name (e.g., "title", "price")
+          - Click "Extract This"
+        
+        #### 4. Set Container (Optional)
+        - Click the box that contains all items
+        - Click "Set as Container"
+        - This helps us detect the pattern
+        
+        #### 5. Test Pagination
+        - Click the "Next" button if there are multiple pages
+        - We'll automatically detect pagination
+        
+        #### 6. Stop Recording
+        - Click "Stop Recording" in the extension
+        - Your recording is automatically saved here
+        
+        #### 7. Generate & Deploy
+        - Come back to this page
+        - Click "Generate Config" on your recording
+        - Review the configuration
+        - Click "Save & Deploy" to start using it!
+        
+        ### 💡 Pro Tips
+        - Always click the **first item** in a list/grid
+        - Extract all fields from that one item
+        - We'll automatically apply to all similar items
+        - Test on 2-3 pages for best accuracy
+        - Use descriptive field names (price, rating, etc.)
+        """)
 
 
 def run_scraper_tab():
@@ -223,20 +355,18 @@ def run_scraper_tab():
     
     client = st.session_state.client
     
-    # Check if trial expired
     if client.is_trial and not client.active:
         st.error("🚫 Your trial has expired. Please add payment to continue using ScraperPro.")
         st.info("Your data and configurations are safe. Activate your subscription to regain access.")
         if st.button("💳 Add Payment Method", type="primary"):
-            st.info("Payment processing integration coming soon! This will activate your subscription.")
+            st.info("Payment processing integration coming soon!")
         return
     
-    # List existing configurations
     config_dir = Path('data/configs')
     config_files = list(config_dir.glob(f'{client.client_id}_*.json'))
     
     if not config_files:
-        st.info("No configurations found. Create one in the Configurations tab first.")
+        st.info("No configurations found. Create one in the Configurations tab or use Visual Recorder!")
         return
     
     config_options = {}
@@ -257,7 +387,6 @@ def run_scraper_tab():
             st.success(f"✅ Scraping completed! {result['records']} records extracted.")
             st.info(f"Output file: {result['output_file']}")
             
-            # Show trial info if applicable
             if 'trial_info' in result:
                 trial = result['trial_info']
                 st.info(f"🎁 Trial Status: {trial['days_remaining']} days remaining on your {trial['selected_tier']} trial")
@@ -265,7 +394,6 @@ def run_scraper_tab():
             if result['requests_remaining'] != -1:
                 st.write(f"Requests remaining today: {result['requests_remaining']}")
             
-            # Show preview
             if result['output_file'].endswith('.csv'):
                 df = pd.read_csv(result['output_file'])
                 st.dataframe(df.head(10))
@@ -276,18 +404,17 @@ def run_scraper_tab():
                     st.info("Payment processing coming soon!")
             else:
                 st.error(f"❌ Scraping failed: {result['error']}")
-                if 'upgrade_url' in result:
-                    st.warning("Consider upgrading your plan for higher limits!")
 
 
 def configurations_tab():
     """Tab for managing configurations"""
     st.header("Scraper Configurations")
     
+    st.info("💡 **Tip:** Use the Visual Recorder to create configurations without writing CSS selectors!")
+    
     client = st.session_state.client
     tier_info = SubscriptionTier[client.tier].value
     
-    # Check config limit
     config_dir = Path('data/configs')
     existing_configs = len(list(config_dir.glob(f'{client.client_id}_*.json')))
     max_configs = tier_info['max_configs']
@@ -304,9 +431,8 @@ def configurations_tab():
         config_name = st.text_input("Configuration Name", placeholder="My E-commerce Scraper")
         target_url = st.text_input("Target URL", placeholder="https://example.com/products")
         
-        st.write("**CSS Selectors** (Use browser DevTools to find selectors)")
-        container = st.text_input("Container Selector", placeholder=".product-card", 
-                                  help="Selector for each item container")
+        st.write("**CSS Selectors** (Use browser DevTools to find selectors or use Visual Recorder)")
+        container = st.text_input("Container Selector", placeholder=".product-card")
         
         col1, col2 = st.columns(2)
         with col1:
@@ -327,8 +453,7 @@ def configurations_tab():
         enable_pagination = st.checkbox("Enable Pagination")
         next_page_selector = None
         if enable_pagination:
-            next_page_selector = st.text_input("Next Page Button Selector", 
-                                              placeholder=".next-page")
+            next_page_selector = st.text_input("Next Page Button Selector", placeholder=".next-page")
         
         output_format = st.selectbox("Output Format", tier_info['export_formats'])
         
@@ -338,7 +463,6 @@ def configurations_tab():
             if not config_name or not target_url:
                 st.error("Configuration name and URL are required")
             else:
-                # Build selectors dictionary
                 selectors = {'container': container}
                 if selector1_name and selector1_css:
                     selectors[selector1_name] = selector1_css
@@ -349,7 +473,6 @@ def configurations_tab():
                 if selector4_name and selector4_css:
                     selectors[selector4_name] = selector4_css
                 
-                # Create configuration
                 config_id = hashlib.md5(f"{config_name}{datetime.now()}".encode()).hexdigest()[:8]
                 
                 pagination = None
@@ -385,7 +508,7 @@ def configurations_tab():
                     st.write(f"**Format:** {config_data['output_format']}")
                     st.json(config_data['selectors'])
     else:
-        st.info("No configurations yet. Create one above!")
+        st.info("No configurations yet. Create one above or use Visual Recorder!")
 
 
 def results_tab():
@@ -408,7 +531,7 @@ def results_tab():
     
     st.write(f"Found {len(result_files)} result files")
     
-    for result_file in result_files[:10]:  # Show last 10 results
+    for result_file in result_files[:10]:
         with st.expander(f"📄 {result_file.name}"):
             st.write(f"**Size:** {result_file.stat().st_size / 1024:.2f} KB")
             st.write(f"**Created:** {datetime.fromtimestamp(result_file.stat().st_mtime)}")
@@ -426,7 +549,7 @@ def results_tab():
                 elif result_file.suffix == '.json':
                     with open(result_file, 'r') as f:
                         data = json.load(f)
-                    st.json(data[:5])  # Show first 5 records
+                    st.json(data[:5])
                     with open(result_file, 'rb') as f:
                         st.download_button(
                             "⬇️ Download",
@@ -438,7 +561,6 @@ def results_tab():
                 st.error(f"Error loading file: {str(e)}")
 
 
-# Main app logic
 def main():
     if st.session_state.logged_in:
         dashboard()
