@@ -1,7 +1,4 @@
-"""
-ScraperPro - Enterprise Web Scraping Platform
-Multi-client, configurable web scraper with tiered pricing support
-"""
+"""Local prototype for configurable web scraping and tier-limit experiments."""
 
 import os
 import json
@@ -32,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 class SubscriptionTier(Enum):
-    """Subscription tiers with feature limits"""
+    """Prototype tier fixtures with unverified feature limits."""
     PRO = {
         'name': 'Pro',
         'price': 49,

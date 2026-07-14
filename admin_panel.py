@@ -3,6 +3,9 @@ ScraperPro Admin Panel
 Complete dashboard for monitoring clients, trials, revenue, and system health
 """
 
+import hmac
+import os
+
 import streamlit as st
 import json
 from pathlib import Path
@@ -12,8 +15,7 @@ from scraper import ScraperPro, ClientConfig, SubscriptionTier
 import plotly.express as px
 import plotly.graph_objects as go
 
-# Admin password - CHANGE THIS!
-ADMIN_PASSWORD = "REMOVED_UNSAFE_DEFAULT"  # TODO: Change this to something secure!
+ADMIN_PASSWORD = os.environ.get("SCRAPERPRO_ADMIN_PASSWORD")
 
 st.set_page_config(
     page_title="ScraperPro Admin Panel",
@@ -36,10 +38,18 @@ def admin_login():
     
     with col2:
         st.markdown("---")
+
+        if not ADMIN_PASSWORD:
+            st.error(
+                "Admin access is disabled. Set SCRAPERPRO_ADMIN_PASSWORD in the "
+                "server environment before starting the admin panel."
+            )
+            return
+
         password = st.text_input("Admin Password", type="password")
         
         if st.button("Login", type="primary", use_container_width=True):
-            if password == ADMIN_PASSWORD:
+            if hmac.compare_digest(password, ADMIN_PASSWORD):
                 st.session_state.admin_logged_in = True
                 st.success("Login successful!")
                 st.rerun()
@@ -47,7 +57,7 @@ def admin_login():
                 st.error("Invalid password")
         
         st.markdown("---")
-        st.caption("⚠️ Change the admin password in admin_panel.py before deploying!")
+        st.caption("Admin credentials are configured through the server environment.")
 
 
 def get_all_clients():

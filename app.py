@@ -1,7 +1,4 @@
-"""
-ScraperPro - Web Interface (UPDATED WITH VISUAL RECORDER)
-Streamlit-based UI for managing scraper configurations
-"""
+"""Prototype Streamlit interface for managing scraper configurations."""
 
 import streamlit as st
 import json
@@ -15,7 +12,7 @@ from scraper import (
 
 # Page configuration
 st.set_page_config(
-    page_title="ScraperPro - Enterprise Web Scraping",
+    page_title="ScraperPro Prototype",
     page_icon="🕷️",
     layout="wide"
 )
@@ -31,7 +28,11 @@ if 'client' not in st.session_state:
 
 def login_page():
     """Login/Register page"""
-    st.title("🕷️ ScraperPro - Enterprise Web Scraping Platform")
+    st.title("🕷️ ScraperPro Prototype")
+    st.warning(
+        "Private prototype: billing, scheduling, proxy, support, and production "
+        "security capabilities are incomplete or unverified."
+    )
     
     tab1, tab2, tab3 = st.tabs(["Login", "Register", "Pricing"])
     
@@ -81,39 +82,11 @@ def login_page():
                 st.error("Please fill all fields")
     
     with tab3:
-        st.header("💰 Pricing Plans")
-        st.info("🎁 **All plans include a 7-day free trial!** Try before you buy.")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.subheader("⭐ Pro")
-            st.metric("Price", "$49/month")
-            st.caption("After 7-day free trial")
-            st.write("**Features:**")
-            st.write("✅ 1,000 requests/day")
-            st.write("✅ 10 configurations")
-            st.write("✅ CSV, Excel, JSON export")
-            st.write("✅ Scheduled scraping")
-            st.write("✅ API access")
-            st.write("✅ Custom headers")
-            st.write("✅ **Visual Recorder**")
-            st.write("✅ 7-day free trial")
-        
-        with col2:
-            st.subheader("🚀 Enterprise")
-            st.metric("Price", "$199/month")
-            st.caption("After 7-day free trial")
-            st.write("**Features:**")
-            st.write("✅ Unlimited requests")
-            st.write("✅ Unlimited configurations")
-            st.write("✅ All export formats + SQL")
-            st.write("✅ Advanced scheduling")
-            st.write("✅ Priority support")
-            st.write("✅ Dedicated proxies")
-            st.write("✅ Custom integrations")
-            st.write("✅ **Visual Recorder Pro**")
-            st.write("✅ 7-day free trial")
+        st.header("Prototype status")
+        st.info(
+            "Tier names and limits are development fixtures. No public pricing, "
+            "service level, support, proxy, or production billing offer is active."
+        )
 
 
 def dashboard():

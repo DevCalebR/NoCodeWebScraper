@@ -49,6 +49,8 @@ ENV/
 # Environment variables
 .env
 .env.local
+.env.*
+!.env.example
 secrets.json
 
 # Testing

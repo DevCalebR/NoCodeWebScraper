@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Set your Stripe secret key
 # Get from: https://dashboard.stripe.com/apikeys
-stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', 'sk_test_YOUR_KEY_HERE')
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
 # Stripe Price IDs (create these in Stripe Dashboard)
 STRIPE_PRICES = {
@@ -42,6 +42,14 @@ class PaymentProcessor:
             if not price_id:
                 raise ValueError(f"No price configured for tier: {client.tier}")
             
+            subscription_data = {
+                'metadata': {
+                    'client_id': client.client_id,
+                }
+            }
+            if not client.is_trial:
+                subscription_data['trial_period_days'] = 0
+
             # Create checkout session
             session = stripe.checkout.Session.create(
                 customer=stripe_customer.id,
@@ -57,15 +65,7 @@ class PaymentProcessor:
                     'client_id': client.client_id,
                     'tier': client.tier
                 },
-                subscription_data={
-                    'metadata': {
-                        'client_id': client.client_id,
-                    }
-                },
-                # Apply trial if user hasn't used it yet
-                subscription_data={
-                    'trial_period_days': 0  # No additional trial, they already had 7 days
-                } if not client.is_trial else {}
+                subscription_data=subscription_data,
             )
             
             logger.info(f"Created checkout session for client {client.client_id}")

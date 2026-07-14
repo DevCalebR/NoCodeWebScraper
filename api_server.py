@@ -1,7 +1,4 @@
-"""
-ScraperPro API Server
-REST API for programmatic access (Pro/Enterprise tiers)
-"""
+"""Prototype REST API for programmatic scraper access."""
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
@@ -12,7 +9,12 @@ from pathlib import Path
 import os
 
 app = Flask(__name__)
-CORS(app)
+allowed_origins = [
+    origin.strip()
+    for origin in os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:8501").split(",")
+    if origin.strip()
+]
+CORS(app, resources={r"/api/*": {"origins": allowed_origins}})
 scraper_app = ScraperPro()
 
 logging.basicConfig(level=logging.INFO)
